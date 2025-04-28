@@ -8,7 +8,7 @@ class Solicitud extends Model
 {
     protected $fillable = [
         'empleado_id', 'fecha_solicitud', 'tipo_permiso', 'fecha_inicio', 'fecha_fin',
-        'hora_inicio', 'hora_fin', 'motivo', 'descripcion', 'archivo_pdf', 'estado'
+        'hora_inicio', 'hora_fin', 'motivo', 'descripcion', 'archivo_pdf', 'estado','estado_eliminado'
     ];
 
     public function empleado()

@@ -22,8 +22,9 @@ return new class extends Migration
             $table->time('hora_fin')->nullable();
             $table->string('motivo');
             $table->text('descripcion')->nullable();
-            $table->string('archivo_pdf')->nullable();
+            $table->binary('archivo_pdf')->nullable();
             $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
+            $table->boolean('estado_eliminado')->default(1);
             $table->timestamps();
         });
     }
