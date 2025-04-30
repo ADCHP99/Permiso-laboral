@@ -10,10 +10,13 @@ class EnsureSanctumAuthenticated
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->User()) {
-            return response()->json(['message' => 'No autenticado.'], 401);
+        if (!$request->user()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado.',
+                'data' => null
+            ], 401);
         }
-
         return $next($request);
     }
 }

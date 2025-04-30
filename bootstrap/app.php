@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\FormatValidationErrors;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,9 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'auth.sanctum' => EnsureSanctumAuthenticated::class,
-            'ability'     => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
-            'any-ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
+            'force.json' => ForceJsonResponse::class,
+            'auth.custom' => EnsureSanctumAuthenticated::class,
+            'format.validation' => FormatValidationErrors::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

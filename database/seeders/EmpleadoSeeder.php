@@ -34,7 +34,7 @@ class EmpleadoSeeder extends Seeder
         ]);
 
         $gerente = Empleado::create([
-            'nombre' => 'Daniela',
+            'nombre' => 'Daniel',
             'apellido' => 'Rendón',
             'cedula' => '0987654321',
             'telefono' => '04-3805401',

@@ -5,8 +5,8 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login',[AuthController::class,'login']);
-Route::middleware('auth:sanctum')->group(function () {
+Route::post('/login',[AuthController::class,'login'])->name('login');
+Route::middleware(['force.json', 'auth.custom', 'format.validation'])->group(function () {
     Route::get('/me', function (Request $request) {
         $user = $request->user();
 
@@ -26,8 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
     Route::post('/logout',[AuthController::class,'logout']);
+    Route::get('/solicitudes',[SolicitudController::class,'index']);
     Route::post('/solicitudes', [SolicitudController::class, 'store']);
-    Route::get('/solicitudes/{id}/archivo', [SolicitudController::class, 'download']);
     Route::get('/solicitudes/{id}', [SolicitudController::class, 'show']);
     Route::put('/solicitudes/{id}', [SolicitudController::class, 'update']);
     Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy']);
