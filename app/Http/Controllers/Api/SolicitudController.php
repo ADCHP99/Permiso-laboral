@@ -9,6 +9,7 @@ use App\Models\Empleado;
 use App\Models\Solicitud;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 
@@ -42,6 +43,95 @@ class SolicitudController extends Controller
         }
 
         return false;
+    }
+    private function puedeAprobar(Empleado $empleado, Solicitud $solicitud): bool
+    {
+        $solicitante = Empleado::find($solicitud->empleado_id);
+
+        if (!$solicitante) {
+            return false;
+        }
+
+        if ($empleado->rol === 'Jefe Inmediato') {
+            // Solo aprueba solicitudes de sus empleados directos
+            return $solicitante->jefe_id === $empleado->id;
+        }
+
+        if ($empleado->rol === 'Gerente de Área') {
+            // Aprueba solicitudes del área (incluye empleados y jefes)
+            return $solicitante->departamento_id === $empleado->departamento_id;
+        }
+
+        if ($empleado->rol === 'Gerente de Recursos Humanos') {
+            // Aprueba cualquier solicitud de empleados normales y jefes
+            return true;
+        }
+
+        if ($empleado->rol === 'Presidente') {
+            // Solo aprueba solicitudes de Gerentes
+            return str_contains($solicitante->cargo, 'Gerente');
+        }
+
+        return false;
+    }
+    public function aprobarSolicitud($id)
+    {
+        $user = auth()->user();
+        $empleado = $user->empleado;
+
+        $solicitud=Solicitud::findOrFail($id);
+        if(!$this->puedeAprobar( $empleado,$solicitud)){
+            return ApiResponse::error("No Autorizado para aprobar esta solicitud",403);
+        }
+        DB::beginTransaction();
+        try {
+            if($empleado->rol === 'Jefe Inmediato'){
+                $solicitud->estado = 'aprobado_jefe';
+            }
+            elseif ($empleado->rol=== 'Gerente de Area'){
+                $solicitud->estado = 'aprobado_gerente';
+            }
+            elseif ($empleado->rol === 'Gerente de Recursos Humanos'){
+                $solicitud->estado = 'aprobado_total';
+
+            }elseif ($empleado->rol === 'Presidente'){
+                $solicitud->estado = 'aprobado_total';
+            }
+            $solicitud->save();
+            DB::commit();
+            return ApiResponse::success('Solicitud aprobada',$solicitud);
+
+        }catch (\Throwable $e){
+            DB::rollBack();
+            return ApiResponse::error("Error al aprobar la solicitud",500);
+        }
+
+    }
+    public function rechazarSolicitud($id,Request $request): JsonResponse
+    {
+        $user = auth()->user();
+        $empleado = $user->empleado;
+
+        $solicitud = Solicitud::findOrFail($id);
+
+        if (!$this->puedeAprobar($empleado, $solicitud)) {
+            return ApiResponse::error('No autorizado para rechazar esta solicitud.', 403);
+        }
+        $request->validate([
+            'observacion_rechazo' => 'required|string|max:500',
+        ]);
+        DB::beginTransaction();
+        try {
+            $solicitud->estado = 'rechazado';
+            $solicitud->observacion_rechazo = $request->observacion_rechazo;
+            $solicitud->save();
+            DB::commit();
+            return ApiResponse::success('Solicitud rechazada exitosamente', $solicitud);
+        }catch (\Throwable $e){
+            DB::rollBack();
+            return ApiResponse::error('Error al rechazar la solicitud', 500);
+        }
+
     }
     public function index(Request $request)
     {

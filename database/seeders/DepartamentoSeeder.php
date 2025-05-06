@@ -14,10 +14,15 @@ class DepartamentoSeeder extends Seeder
     public function run(): void
     {
         DB::table('departamentos')->insert([
+            ['nombre' => 'Presidencia'],
             ['nombre' => 'Sistemas'],
             ['nombre' => 'Recursos Humanos'],
             ['nombre' => 'Finanzas'],
-            ['nombre' => 'Presidencia'],
+            ['nombre' => 'Auditoria'],
+            ['nombre' => 'Contabilidad'],
+            ['nombre' => 'Logistica'],
+            ['nombre' => 'Procesos'],
+
         ]);
     }
 }

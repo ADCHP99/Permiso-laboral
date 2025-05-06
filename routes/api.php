@@ -9,7 +9,6 @@ Route::post('/login',[AuthController::class,'login'])->name('login');
 Route::middleware(['force.json', 'auth.custom', 'format.validation'])->group(function () {
     Route::get('/me', function (Request $request) {
         $user = $request->user();
-
         // Cargar la relación empleado (si quieres mostrarla)
         $user->load('empleado');
 
@@ -31,4 +30,7 @@ Route::middleware(['force.json', 'auth.custom', 'format.validation'])->group(fun
     Route::get('/solicitudes/{id}', [SolicitudController::class, 'show']);
     Route::put('/solicitudes/{id}', [SolicitudController::class, 'update']);
     Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy']);
+
+    Route::post('solicitudes/{id}/aprobar', [SolicitudController::class, 'aprobarSolicitud']);
+    Route::post('solicitudes/{id}/rechazar', [SolicitudController::class, 'rechazarSolicitud']);
 });

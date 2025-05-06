@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre', 60);
             $table->string('apellido', 60);
             $table->string('cedula', 10)->unique();
-            $table->string('telefono', 15)->unique();
+            $table->string('telefono', 15)->nullable();
             $table->string('extension', 10)->nullable();
             $table->string('celular', 15)->nullable();
             $table->string('correo', 100)->unique();

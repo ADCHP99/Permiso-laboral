@@ -24,6 +24,7 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->string('archivo_pdf')->nullable();
             $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
+            $table->text('observacion_rechazp')->nullable();
             $table->boolean('estado_eliminado')->default(1);
             $table->timestamps();
         });
