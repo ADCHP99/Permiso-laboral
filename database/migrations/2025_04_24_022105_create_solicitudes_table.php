@@ -23,8 +23,8 @@ return new class extends Migration
             $table->string('motivo');
             $table->text('descripcion')->nullable();
             $table->string('archivo_pdf')->nullable();
-            $table->enum('estado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
-            $table->text('observacion_rechazp')->nullable();
+            $table->enum('estado', ['pendiente', 'aprobado_jefe', 'aprobado_gerente', 'aprobado_total', 'rechazado'])->default('pendiente');
+            $table->text('observacion_rechazo')->nullable();
             $table->boolean('estado_eliminado')->default(1);
             $table->timestamps();
         });

@@ -48,7 +48,7 @@ class EmpleadoSeeder extends Seeder
             'correo' => 'drendon@liris.com.ec',
             'fecha_nacimiento' => '1989-01-01',
             'cargo' => 'Gerente Área Sistemas',
-            'rol' => 'Gerente Area',
+            'rol' => 'Gerente de Área',
             'departamento_id' => $sistemas,
             'jefe_id' => $presidente->id
         ]);
@@ -63,7 +63,7 @@ class EmpleadoSeeder extends Seeder
             'correo' => 'krosado@liris.com.ec',
             'fecha_nacimiento' => '1990-03-12',
             'cargo' => 'Jefe Desarrollo',
-            'rol' => 'Jefe',
+            'rol' => 'Jefe Inmediato',
             'departamento_id' => $sistemas,
             'jefe_id' => $gerenteSistema->id
         ]);
@@ -78,10 +78,11 @@ class EmpleadoSeeder extends Seeder
             'correo' => 'jvalencia@liris.com.ec',
             'fecha_nacimiento' => '1990-03-12',
             'cargo' => 'Jefe Tecnologia',
-            'rol' => 'Jefe',
+            'rol' => 'Jefe Inmediato',
             'departamento_id' => $sistemas,
             'jefe_id' => $gerenteSistema->id
         ]);
+
         $jefeSoporteTecnico = Empleado::create([
             'nombre' => 'Julio',
             'apellido' => 'Martin',
@@ -92,11 +93,10 @@ class EmpleadoSeeder extends Seeder
             'correo' => 'jefesoportetecnico@liris.com.ec',
             'fecha_nacimiento' => '1990-03-12',
             'cargo' => 'Jefe Soporte Tecnico',
-            'rol' => 'Jefe',
+            'rol' => 'Jefe Inmediato',
             'departamento_id' => $sistemas,
             'jefe_id' => $gerenteSistema->id
         ]);
-
 
         Empleado::create([
             'nombre' => 'Roni',
@@ -196,7 +196,7 @@ class EmpleadoSeeder extends Seeder
             'correo' => 'rjmedina@liris.com.ec',
             'fecha_nacimiento' => '1992-01-01',
             'cargo' => 'Gerente de RRHH',
-            'rol' => 'Gerente Area',
+            'rol' => 'Gerente de Recursos Humanos',
             'departamento_id' => $rrhh,
             'jefe_id' => $presidente->id
         ]);

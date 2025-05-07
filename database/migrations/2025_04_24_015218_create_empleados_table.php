@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('correo', 100)->unique();
             $table->date('fecha_nacimiento');
             $table->string('cargo', 100);
-            $table->enum('rol', ['Empleado', 'Jefe', 'Gerente Area', 'RRHH', 'Presidente']);
+            $table->enum('rol', ['Empleado', 'Jefe Inmediato', 'Gerente de Área', 'Gerente de Recursos Humanos', 'Presidente']);
             $table->string('foto_perfil')->nullable();
             $table->foreignId('departamento_id')->constrained('departamentos')->cascadeOnDelete();
             $table->unsignedBigInteger('jefe_id')->nullable();

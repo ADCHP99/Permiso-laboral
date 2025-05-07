@@ -31,6 +31,6 @@ Route::middleware(['force.json', 'auth.custom', 'format.validation'])->group(fun
     Route::put('/solicitudes/{id}', [SolicitudController::class, 'update']);
     Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy']);
 
-    Route::post('solicitudes/{id}/aprobar', [SolicitudController::class, 'aprobarSolicitud']);
-    Route::post('solicitudes/{id}/rechazar', [SolicitudController::class, 'rechazarSolicitud']);
+    Route::post('/solicitudes/{id}/aprobar', [SolicitudController::class, 'aprobarSolicitud']);
+    Route::post('/solicitudes/{id}/rechazar', [SolicitudController::class, 'rechazarSolicitud']);
 });
