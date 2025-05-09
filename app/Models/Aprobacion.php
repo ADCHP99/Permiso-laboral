@@ -9,7 +9,7 @@ class Aprobacion extends Model
     protected $fillable = [
         'solicitud_id', 'aprobador_id', 'nivel', 'resultado', 'observacion', 'fecha_aprobacion'
     ];
-
+    protected $table = 'aprobaciones';
     public function solicitud()
     {
         return $this->belongsTo(Solicitud::class);

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AprobacionController;
 use App\Http\Controllers\Api\SolicitudController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Http\Request;
@@ -25,12 +26,17 @@ Route::middleware(['force.json', 'auth.custom', 'format.validation'])->group(fun
         ]);
     });
     Route::post('/logout',[AuthController::class,'logout']);
+
     Route::get('/solicitudes',[SolicitudController::class,'index']);
     Route::post('/solicitudes', [SolicitudController::class, 'store']);
     Route::get('/solicitudes/{id}', [SolicitudController::class, 'show']);
     Route::put('/solicitudes/{id}', [SolicitudController::class, 'update']);
     Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy']);
 
-    Route::post('/solicitudes/{id}/aprobar', [SolicitudController::class, 'aprobarSolicitud']);
-    Route::post('/solicitudes/{id}/rechazar', [SolicitudController::class, 'rechazarSolicitud']);
+    //Route::apiResource('/solicitudes', SolicitudController::class);
+    Route::post('/aprobaciones/{solicitud}/aprobar', [AprobacionController::class, 'aprobar']);
+    Route::post('/aprobaciones/{solicitud}/rechazar', [AprobacionController::class, 'rechazar']);
+   // Route::get('/aprobaciones/{solicitud}', [AprobacionController::class, 'historial']);
+    Route::get('/aprobaciones', [AprobacionController::class, 'index']);
+    Route::get('/aprobaciones/{solicitud}', [AprobacionController::class, 'verDetalle']);
 });

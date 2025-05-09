@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('aprobaciones', function (Blueprint $table) {
             $table->id();
             $table->foreignId('solicitud_id')->constrained('solicitudes')->cascadeOnDelete();
-            $table->foreignId('aprobador_id')->constrained('empleados')->cascadeOnDelete();
+            $table->foreignId('aprobador_id')->nullable()->constrained('empleados')->cascadeOnDelete();
             $table->enum('nivel', ['jefe', 'gerente_area', 'rrhh', 'presidencia']);
             $table->enum('resultado', ['pendiente', 'aprobada', 'rechazada'])->default('pendiente');
             $table->text('observacion')->nullable();
