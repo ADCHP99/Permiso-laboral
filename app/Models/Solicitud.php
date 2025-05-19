@@ -19,9 +19,10 @@ class Solicitud extends Model
     {
         return $this->belongsTo(Empleado::class);
     }
-    public function aprobaciones()
+    public function solicitud()
     {
-        return $this->hasMany(Aprobacion::class, 'solicitud_id');
+        return $this->belongsTo(Solicitud::class);
     }
+
 
 }

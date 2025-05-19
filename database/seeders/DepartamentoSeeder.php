@@ -22,6 +22,8 @@ class DepartamentoSeeder extends Seeder
             ['nombre' => 'Contabilidad'],
             ['nombre' => 'Logistica'],
             ['nombre' => 'Procesos'],
+            ['nombre' => 'Operaciones'],
+
 
         ]);
     }

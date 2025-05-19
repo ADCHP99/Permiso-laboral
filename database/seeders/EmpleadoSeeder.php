@@ -17,10 +17,7 @@ class EmpleadoSeeder extends Seeder
         $sistemas = DB::table('departamentos')->where('nombre', 'Sistemas')->value('id');
         $rrhh = DB::table('departamentos')->where('nombre', 'Recursos Humanos')->value('id');
         $presidencia = DB::table('departamentos')->where('nombre', 'Presidencia')->value('id');
-        $finanzas= DB::table('departamentos')->where('nombre', 'Finanzas')->value('id');
-        $auditoria = DB::table('departamentos')->where('nombre', 'Auditoria')->value('id');
-        $contabilidad = DB::table('departamentos')->where('nombre', 'Contabilidad')->value('id');
-        $logistica= DB::table('departamentos')->where('nombre', 'Logistica')->value('id');
+        $operaciones = DB::table('departamentos')->where('nombre', 'Operaciones')->value('id');
         $procesos = DB::table('departamentos')->where('nombre', 'Procesos')->value('id');
 
         $presidente = Empleado::create([
@@ -185,6 +182,21 @@ class EmpleadoSeeder extends Seeder
             'jefe_id' => $jefeSoporteTecnico->id
         ]);
 
+        Empleado::create([
+            'nombre' => 'Alejandro',
+            'apellido' => 'Chucuyan',
+            'cedula' => '0950990432',
+            'telefono' => '',
+            'extension' => '',
+            'celular' => '0980836419',
+            'correo' => 'alejandro@liris.com.ec',
+            'fecha_nacimiento' => '1999-03-09',
+            'cargo' => 'Ingeniero de Desarrollo en entrenamiento',
+            'rol' => 'Empleado',
+            'departamento_id' => $sistemas,
+            'jefe_id' => $jefeDesarrollo->id
+        ]);
+
         //RRHH
         $gerenteRrhh = Empleado::create([
             'nombre' => 'Ruth',
@@ -200,5 +212,93 @@ class EmpleadoSeeder extends Seeder
             'departamento_id' => $rrhh,
             'jefe_id' => $presidente->id
         ]);
+        $jefeRrhh = Empleado::create([
+            'nombre' => 'Patricia',
+            'apellido' => 'Rivera',
+            'cedula' => '0974635000',
+            'telefono' => '04-3805400',
+            'extension' => '11.301',
+            'celular' => '0996812170',
+            'correo' => 'privera@liris.com.ec',
+            'fecha_nacimiento' => '1992-01-01',
+            'cargo' => 'Jefe de Recursos Humanos',
+            'rol' => 'Jefe Inmediato',
+            'departamento_id' => $rrhh,
+            'jefe_id' => $gerenteRrhh->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Lisbeth',
+            'apellido' => 'Medrano',
+            'cedula' => '0814475878',
+            'telefono' => '04-3805400',
+            'extension' => '11.308',
+            'celular' => '0997020409',
+            'correo' => 'lmedrano@liris.com.ec',
+            'fecha_nacimiento' => '1990-11-20',
+            'cargo' => 'Coordinadora de Selección',
+            'rol' => 'Empleado',
+            'departamento_id' =>$rrhh ,
+            'jefe_id' => $jefeRrhh->id
+        ]);
+
+        Empleado::create([
+            'nombre' => 'Evelyn',
+            'apellido' => 'Zambrano',
+            'cedula' => '0723408230',
+            'telefono' => '04-3805400',
+            'extension' => '11.305',
+            'celular' => '0997767923',
+            'correo' => 'ezambrano@liris.com.ec',
+            'fecha_nacimiento' => '1990-11-20',
+            'cargo' => 'Analista de Nómina',
+            'rol' => 'Empleado',
+            'departamento_id' =>$rrhh ,
+            'jefe_id' => $jefeRrhh->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Daniela',
+            'apellido' => 'Ramon',
+            'cedula' => '0923365574',
+            'telefono' => '04-3805400',
+            'extension' => '11.302',
+            'celular' => '0980107048',
+            'correo' => 'dramon@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-15',
+            'cargo' => 'Analista de Recursos Humanos Corporativo',
+            'rol' => 'Empleado',
+            'departamento_id' =>$rrhh ,
+            'jefe_id' => $jefeRrhh->id
+        ]);
+
+        //procesos
+        $GerenteProcesos= Empleado::create([
+            'nombre' => 'Paola',
+            'apellido' => 'Garcia',
+            'cedula' => '0986854445',
+            'telefono' => '04-3805400',
+            'extension' => '11.500',
+            'celular' => '0988833061',
+            'correo' => 'dramon@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-15',
+            'cargo' => 'Gerente de Procesos y Proyectos',
+            'rol' => 'Gerente de Área',
+            'departamento_id' =>$procesos ,
+            'jefe_id' => $presidente->id
+        ]);
+        $JefeProcesos= Empleado::create([
+            'nombre' => 'Diana',
+            'apellido' => 'Brusil',
+            'cedula' => '0986857866',
+            'telefono' => '04-3805400',
+            'extension' => '11.501',
+            'celular' => '0997772042',
+            'correo' => 'dbrusil@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-15',
+            'cargo' => 'Jefe de Procesos y Proyectos',
+            'rol' => 'Jefe Inmediato',
+            'departamento_id' =>$procesos ,
+            'jefe_id' => $GerenteProcesos->id
+        ]);
     }
 }
+
