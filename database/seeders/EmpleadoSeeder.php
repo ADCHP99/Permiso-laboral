@@ -278,7 +278,7 @@ class EmpleadoSeeder extends Seeder
             'telefono' => '04-3805400',
             'extension' => '11.500',
             'celular' => '0988833061',
-            'correo' => 'dramon@liris.com.ec',
+            'correo' => 'pgarcia@liris.com.ec',
             'fecha_nacimiento' => '1995-09-15',
             'cargo' => 'Gerente de Procesos y Proyectos',
             'rol' => 'Gerente de Área',

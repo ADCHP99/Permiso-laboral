@@ -178,27 +178,75 @@ class SolicitudController extends Controller
         $empleado = $request->user()->empleado;
         $solicitud = Solicitud::with('empleado')->find($id);
 
-        if (!$solicitud || !$this->puedeAprobar($empleado, $solicitud)) {
-            return ApiResponse::error("No autorizado para aprobar esta solicitud", 403);
+        if (!$solicitud) {
+            return ApiResponse::error("Solicitud no encontrada", 404);
         }
 
-        if ($solicitud->estado === 'rechazado' || $solicitud->estado === 'aprobado_total') {
+        $solicitante = $solicitud->empleado;
+
+        // NO PERMITIR si ya está finalizada
+        if (in_array($solicitud->estado, ['rechazado', 'aprobado_total'])) {
             return ApiResponse::error("Solicitud ya fue finalizada", 403);
         }
 
-        DB::beginTransaction();
-        try {
+        // *** FLUJO PARA EMPLEADO COMÚN ***
+        if ($solicitante->rol === 'Empleado') {
             if ($empleado->rol === 'Jefe Inmediato') {
+                if ($solicitud->estado !== 'pendiente') {
+                    return ApiResponse::error('Solo puede aprobar si está pendiente.', 403);
+                }
                 $solicitud->estado = 'aprobado_jefe';
             } elseif ($empleado->rol === 'Gerente de Área') {
+                if ($solicitud->estado !== 'aprobado_jefe') {
+                    return ApiResponse::error('Debe aprobar primero el Jefe Inmediato.', 403);
+                }
                 $solicitud->estado = 'aprobado_gerente';
-            } elseif (in_array($empleado->rol, ['Gerente de Recursos Humanos', 'Presidente'])) {
+            } elseif ($empleado->rol === 'Gerente de Recursos Humanos') {
+                if ($solicitud->estado !== 'aprobado_gerente') {
+                    return ApiResponse::error('Debe aprobar primero el Gerente de Área.', 403);
+                }
                 $solicitud->estado = 'aprobado_total';
+            } else {
+                return ApiResponse::error('No autorizado.', 403);
             }
+        }
 
+        // *** FLUJO PARA JEFE INMEDIATO (quien solicita) ***
+        elseif ($solicitante->rol === 'Jefe Inmediato') {
+            if ($empleado->rol === 'Gerente de Área') {
+                if ($solicitud->estado !== 'pendiente') {
+                    return ApiResponse::error('Solo puede aprobar si está pendiente.', 403);
+                }
+                $solicitud->estado = 'aprobado_gerente';
+            } elseif ($empleado->rol === 'Gerente de Recursos Humanos') {
+                if ($solicitud->estado !== 'aprobado_gerente') {
+                    return ApiResponse::error('Debe aprobar primero el Gerente de Área.', 403);
+                }
+                $solicitud->estado = 'aprobado_total';
+            } else {
+                return ApiResponse::error('No autorizado.', 403);
+            }
+        }
+
+        // *** FLUJO PARA GERENTE DE ÁREA o GERENTE DE RECURSOS HUMANOS (quien solicita) ***
+        elseif (in_array($solicitante->rol, ['Gerente de Área', 'Gerente de Recursos Humanos'])) {
+            if ($empleado->rol === 'Presidente') {
+                if ($solicitud->estado !== 'pendiente') {
+                    return ApiResponse::error('Solo puede aprobar si está pendiente.', 403);
+                }
+                $solicitud->estado = 'aprobado_total';
+            } else {
+                return ApiResponse::error('Solo el Presidente puede aprobar estas solicitudes.', 403);
+            }
+        } else {
+            return ApiResponse::error('Rol de solicitante no reconocido.', 403);
+        }
+
+        // Guardar
+        DB::beginTransaction();
+        try {
             $solicitud->save();
             DB::commit();
-
             return ApiResponse::success("Solicitud aprobada", $solicitud);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -206,6 +254,7 @@ class SolicitudController extends Controller
             return ApiResponse::error("Error interno al aprobar la solicitud", 500);
         }
     }
+
 
     public function rechazar($id, Request $request)
     {
