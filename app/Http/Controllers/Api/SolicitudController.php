@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Log;
 
 class SolicitudController extends Controller
 {
+    // --- Chequeo para APROBAR
     private function puedeAprobar(Empleado $empleado, Solicitud $solicitud): bool
     {
         $solicitante = $solicitud->empleado;
-
         if (!$solicitante) return false;
 
         if (in_array($solicitante->rol, ['Gerente de Área', 'Gerente de Recursos Humanos'])) {
@@ -38,6 +38,7 @@ class SolicitudController extends Controller
         return false;
     }
 
+    // --- Chequeo para VER
     private function puedeVer(Empleado $empleado, Solicitud $solicitud): bool
     {
         $solicitante = $solicitud->empleado;
@@ -65,6 +66,7 @@ class SolicitudController extends Controller
         return false;
     }
 
+    // --- LISTADO GENERAL para jefes/gerentes/rrhh/presidente
     public function index(Request $request)
     {
         $empleado = $request->user()->empleado;
@@ -79,6 +81,7 @@ class SolicitudController extends Controller
         return ApiResponse::success('Solicitudes', $solicitudes);
     }
 
+    // --- VER DETALLE (para los que pueden ver)
     public function show($id, Request $request)
     {
         $empleado = $request->user()->empleado;
@@ -91,6 +94,7 @@ class SolicitudController extends Controller
         return ApiResponse::success('Solicitud', $solicitud);
     }
 
+    // --- CREAR SOLICITUD (solo para el usuario logueado)
     public function store(StoreSolicitudRequest $request)
     {
         $data = $request->validated();
@@ -118,9 +122,11 @@ class SolicitudController extends Controller
 
         return ApiResponse::success('Solicitud registrada', [
             'solicitud' => $solicitud,
-            'archivo_pdf' => $archivoPath ? asset('storage/{$archivoPath}') : null,
+            'archivo_pdf' => $archivoPath ? asset("storage/$archivoPath") : null,
         ]);
     }
+
+    // --- ACTUALIZAR (solo dueño, y si está pendiente)
     public function update(StoreSolicitudRequest $request, $id)
     {
         $empleado = $request->user()->empleado;
@@ -136,7 +142,6 @@ class SolicitudController extends Controller
 
         $data = $request->validated();
 
-        // Subir archivo si lo envía
         if ($request->hasFile('archivo_pdf') && $request->file('archivo_pdf')->isValid()) {
             $archivoPath = $request->file('archivo_pdf')->store('solicitudes', 'public');
             $solicitud->archivo_pdf = $archivoPath;
@@ -154,6 +159,8 @@ class SolicitudController extends Controller
 
         return ApiResponse::success("Solicitud actualizada correctamente", $solicitud);
     }
+
+    // --- ELIMINAR (solo dueño y pendiente)
     public function destroy(Request $request, $id)
     {
         $empleado = $request->user()->empleado;
@@ -173,6 +180,7 @@ class SolicitudController extends Controller
         return ApiResponse::success("Solicitud eliminada correctamente");
     }
 
+    // --- APROBAR (según flujo de roles)
     public function aprobar($id, Request $request)
     {
         $empleado = $request->user()->empleado;
@@ -184,12 +192,12 @@ class SolicitudController extends Controller
 
         $solicitante = $solicitud->empleado;
 
-        // NO PERMITIR si ya está finalizada
+        // Si ya fue finalizada
         if (in_array($solicitud->estado, ['rechazado', 'aprobado_total'])) {
             return ApiResponse::error("Solicitud ya fue finalizada", 403);
         }
 
-        // *** FLUJO PARA EMPLEADO COMÚN ***
+        // Empleado común
         if ($solicitante->rol === 'Empleado') {
             if ($empleado->rol === 'Jefe Inmediato') {
                 if ($solicitud->estado !== 'pendiente') {
@@ -210,8 +218,7 @@ class SolicitudController extends Controller
                 return ApiResponse::error('No autorizado.', 403);
             }
         }
-
-        // *** FLUJO PARA JEFE INMEDIATO (quien solicita) ***
+        // Jefe Inmediato solicita
         elseif ($solicitante->rol === 'Jefe Inmediato') {
             if ($empleado->rol === 'Gerente de Área') {
                 if ($solicitud->estado !== 'pendiente') {
@@ -227,8 +234,7 @@ class SolicitudController extends Controller
                 return ApiResponse::error('No autorizado.', 403);
             }
         }
-
-        // *** FLUJO PARA GERENTE DE ÁREA o GERENTE DE RECURSOS HUMANOS (quien solicita) ***
+        // Gerente de Área o Recursos Humanos solicita
         elseif (in_array($solicitante->rol, ['Gerente de Área', 'Gerente de Recursos Humanos'])) {
             if ($empleado->rol === 'Presidente') {
                 if ($solicitud->estado !== 'pendiente') {
@@ -255,7 +261,7 @@ class SolicitudController extends Controller
         }
     }
 
-
+    // --- RECHAZAR
     public function rechazar($id, Request $request)
     {
         $empleado = $request->user()->empleado;
@@ -276,6 +282,7 @@ class SolicitudController extends Controller
         return ApiResponse::success("Solicitud rechazada", $solicitud);
     }
 
+    // --- CRUD de MIS solicitudes (empleado común)
     public function meSolicitudes(Request $request)
     {
         $empleado = $request->user()->empleado;
@@ -284,4 +291,16 @@ class SolicitudController extends Controller
             ->orderBy('id', 'asc')->get();
         return ApiResponse::success('Mis solicitudes', $solicitudes);
     }
+    public function showMe($id, Request $request)
+    {
+        $empleado = $request->user()->empleado;
+        $solicitud = Solicitud::find($id);
+
+        if (!$solicitud || $solicitud->empleado_id !== $empleado->id) {
+            return ApiResponse::error("Solicitud no encontrada o no autorizada", 403);
+        }
+        return ApiResponse::success('Solicitud', $solicitud);
+    }
+
 }
+
