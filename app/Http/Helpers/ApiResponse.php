@@ -9,7 +9,8 @@ class ApiResponse
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $data
+            'data' => $data,
+            'code' => $code
         ], $code);
     }
 
@@ -17,8 +18,38 @@ class ApiResponse
     {
         return response()->json([
             'success' => false,
+            'errors' => $errors,
             'message' => $message,
-            'errors' => $errors
+            'code' => $code
+        ], $code);
+    }
+
+    public static function validation($errors, string $message = "Error de validacion",int $code = 422 )
+    {
+        return self::error( $message,$errors, $code);
+    }
+
+    public static function unauthorized(string $message = "No autorizado")
+    {
+        return self::error($message, 404);
+    }
+    public static function notFound(string $message = 'No encontrado')
+    {
+        return self::error($message, null, 404);
+    }
+    public static function paginated($paginator, string $message = 'Operación exitosa', int $code = 200)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+            'code' => $code
         ], $code);
     }
 }

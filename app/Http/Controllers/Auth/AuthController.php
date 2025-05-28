@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Helpers\ApiResponse;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,19 +17,30 @@ class AuthController extends Controller
         ]);
         $usuario = Usuario::where('nombre_usuario',$request->nombre_usuario)->first();
         if(!$usuario || !Hash::check($request->password, $usuario->password)){
-            return response()->json([
-                'message' => 'Credenciales incorrectas'
-            ]);
+            return ApiResponse::error('Credenciales incorrectas',null,401);
         }
-        $token = $usuario->createToken('api-oken')->plainTextToken;
-        return response()->json([
+        $token = $usuario->createToken('api-token')->plainTextToken;
+        $data=[
             'token' => $token,
-            'usuario' => $usuario
-        ]);
+            'usuario' => [
+                'id' => $usuario->id,
+                'nombre_usuario' => $usuario->nombre_usuario,
+                'empleado' => [
+                    'id' => $usuario->empleado?->id,
+                    'nombre' => $usuario->empleado?->nombre,
+                    'apellido' => $usuario->empleado?->apellido,
+                    'cedula' => $usuario->empleado?->cedula,
+                    'telefono' => $usuario->empleado?->telefono,
+                    'cargo' => $usuario->empleado?->cargo,
+                    'rol' => $usuario->empleado?->rol,
+                ]
+            ]
+        ];
+        return ApiResponse::success("Inicio de Sesion exitoso",$data);
     }
     public function logout(Request $request){
         $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Sesion cerrada']);
+        return ApiResponse::success("Sesion Cerrada");
     }
 
     public function me(Request $request)
@@ -36,19 +48,20 @@ class AuthController extends Controller
         $user = $request->user();
         $user->load('empleado'); // Cargamos la relación empleado
 
-        return response()->json([
+        $data = [
             'id' => $user->id,
             'nombre_usuario' => $user->nombre_usuario,
-            'empleado' => $user->empleado ? [
-                'id' => $user->empleado->id,
-                'nombre' => $user->empleado->nombre,
-                'apellido' => $user->empleado->apellido,
-                'cedula' => $user->empleado->cedula,
-                'telefono' => $user->empleado->telefono,
-                'cargo' => $user->empleado->cargo,
-                'rol' => $user->empleado->rol,
-            ] : null,
-        ]);
+            'empleado' => [
+                'id' => $user->empleado?->id,
+                'nombre' => $user->empleado?->nombre,
+                'apellido' => $user->empleado?->apellido,
+                'cedula' => $user->empleado?->cedula,
+                'telefono' => $user->empleado?->telefono,
+                'cargo' => $user->empleado?->cargo,
+                'rol' => $user->empleado?->rol,
+            ]
+            ];
+        return ApiResponse::success("Usuario autenticado",$data);
     }
 
 }

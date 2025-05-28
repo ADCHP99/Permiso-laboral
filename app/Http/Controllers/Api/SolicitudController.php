@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class SolicitudController extends Controller
 {
-    // --- Chequeo para APROBAR
+    //  APROBAR
     private function puedeAprobar(Empleado $empleado, Solicitud $solicitud): bool
     {
         $solicitante = $solicitud->empleado;
@@ -39,6 +39,7 @@ class SolicitudController extends Controller
     }
 
     // --- Chequeo para VER
+
     private function puedeVer(Empleado $empleado, Solicitud $solicitud): bool
     {
         $solicitante = $solicitud->empleado;
@@ -71,24 +72,38 @@ class SolicitudController extends Controller
     {
         $empleado = $request->user()->empleado;
 
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
+
+        $perPage = $request->input('perPage', 5);
+
+        $paginator = Solicitud::with('empleado')
+            ->where('estado_eliminado', 1)
+            ->orderByDesc('fecha_solicitud')
+            ->paginate($perPage);
+
+        $items = $paginator->getCollection()->filter(fn($s) => $this->puedeVer($empleado, $s))->values();
+        $paginator->setCollection($items);
+        /*
         $solicitudes = Solicitud::with('empleado')
             ->where('estado_eliminado', 1)
             ->get()
             ->filter(fn($s) => $this->puedeVer($empleado, $s))
             ->sortByDesc('fecha_solicitud')
             ->values();
-
-        return ApiResponse::success('Solicitudes', $solicitudes);
+*/
+        return ApiResponse::paginated($paginator, 'Solicitudes');
     }
 
     // --- VER DETALLE (para los que pueden ver)
     public function show($id, Request $request)
     {
         $empleado = $request->user()->empleado;
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
+
         $solicitud = Solicitud::with('empleado')->find($id);
 
         if (!$solicitud || !$this->puedeVer($empleado, $solicitud)) {
-            return ApiResponse::error("Solicitud no encontrada o sin permiso para verla", 403);
+            return ApiResponse::notFound("Solicitud no encontrada o sin permiso para verla");
         }
 
         return ApiResponse::success('Solicitud', $solicitud);
@@ -99,6 +114,8 @@ class SolicitudController extends Controller
     {
         $data = $request->validated();
         $user = $request->user();
+
+        if(!$user || !$user->empleado_id ) return ApiResponse::unauthorized("Usuario sin empleado asociado");
 
         $archivoPath = null;
         if ($request->hasFile('archivo_pdf') && $request->file('archivo_pdf')->isValid()) {
@@ -130,10 +147,13 @@ class SolicitudController extends Controller
     public function update(StoreSolicitudRequest $request, $id)
     {
         $empleado = $request->user()->empleado;
+
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
+
         $solicitud = Solicitud::find($id);
 
         if (!$solicitud || $solicitud->empleado_id !== $empleado->id) {
-            return ApiResponse::error("Solicitud no encontrada o no autorizada para modificarla", 403);
+            return ApiResponse::notFound("Solicitud no encontrada o no autorizada para modificarla");
         }
 
         if ($solicitud->estado !== 'pendiente') {
@@ -164,10 +184,11 @@ class SolicitudController extends Controller
     public function destroy(Request $request, $id)
     {
         $empleado = $request->user()->empleado;
+        if (!$empleado) return ApiResponse::unauthorized('Usuario no autenticado.');
         $solicitud = Solicitud::find($id);
 
         if (!$solicitud || $solicitud->empleado_id !== $empleado->id) {
-            return ApiResponse::error("Solicitud no encontrada o no autorizada para eliminarla", 403);
+            return ApiResponse::notFound("Solicitud no encontrada o no autorizada para eliminarla");
         }
 
         if ($solicitud->estado !== 'pendiente') {
@@ -184,11 +205,11 @@ class SolicitudController extends Controller
     public function aprobar($id, Request $request)
     {
         $empleado = $request->user()->empleado;
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
         $solicitud = Solicitud::with('empleado')->find($id);
 
-        if (!$solicitud) {
-            return ApiResponse::error("Solicitud no encontrada", 404);
-        }
+        if (!$solicitud) return ApiResponse::notFound("Solicitud no encontrada");
+
 
         $solicitante = $solicitud->empleado;
 
@@ -265,8 +286,8 @@ class SolicitudController extends Controller
     public function rechazar($id, Request $request)
     {
         $empleado = $request->user()->empleado;
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
         $solicitud = Solicitud::with('empleado')->find($id);
-
         if (!$solicitud || !$this->puedeAprobar($empleado, $solicitud)) {
             return ApiResponse::error("No autorizado para rechazar esta solicitud", 403);
         }
@@ -286,18 +307,25 @@ class SolicitudController extends Controller
     public function meSolicitudes(Request $request)
     {
         $empleado = $request->user()->empleado;
-        $solicitudes = Solicitud::where('empleado_id', $empleado->id)
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
+
+        $perPage = $request->input('per_page', 5); // Por defecto, 10 por página
+
+        $paginator = Solicitud::where('empleado_id', $empleado->id)
             ->where('estado_eliminado', 1)
-            ->orderBy('id', 'asc')->get();
-        return ApiResponse::success('Mis solicitudes', $solicitudes);
+            ->orderBy('id', 'asc')
+            ->paginate($perPage);
+
+        return ApiResponse::paginated($paginator, 'Mis solicitudes');
     }
     public function showMe($id, Request $request)
     {
         $empleado = $request->user()->empleado;
+        if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
         $solicitud = Solicitud::find($id);
 
         if (!$solicitud || $solicitud->empleado_id !== $empleado->id) {
-            return ApiResponse::error("Solicitud no encontrada o no autorizada", 403);
+            return ApiResponse::notFound("Solicitud no encontrada o no autorizada");
         }
         return ApiResponse::success('Solicitud', $solicitud);
     }
