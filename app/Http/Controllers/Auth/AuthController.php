@@ -12,9 +12,15 @@ class AuthController extends Controller
 {
     public function login(Request $request){
         $request->validate([
-           'nombre_usuario' => 'required | string',
-            'password' => 'required | string'
-        ]);
+           'nombre_usuario' => 'required|string',
+            'password' => 'required|string'
+        ],
+            [
+                'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
+                'nombre_usuario.string'   => 'El nombre de usuario debe ser un texto.',
+                'password.required'       => 'La contraseña es obligatoria.',
+                'password.string'         => 'La contraseña debe ser un texto.'
+            ]);
         $usuario = Usuario::where('nombre_usuario',$request->nombre_usuario)->first();
         if(!$usuario || !Hash::check($request->password, $usuario->password)){
             return ApiResponse::error('Credenciales incorrectas',null,401);
@@ -46,7 +52,7 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         $user = $request->user();
-        $user->load('empleado'); // Cargamos la relación empleado
+        $user->load('empleado');
 
         $data = [
             'id' => $user->id,

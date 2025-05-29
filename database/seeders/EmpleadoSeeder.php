@@ -19,6 +19,7 @@ class EmpleadoSeeder extends Seeder
         $presidencia = DB::table('departamentos')->where('nombre', 'Presidencia')->value('id');
         $operaciones = DB::table('departamentos')->where('nombre', 'Operaciones')->value('id');
         $procesos = DB::table('departamentos')->where('nombre', 'Procesos')->value('id');
+        $credito_cobranza= DB::table('departamentos')->where('nombre', 'Credito y Cobranzas')->value('id');
 
         $presidente = Empleado::create([
             'nombre' => 'Antonio',
@@ -298,6 +299,150 @@ class EmpleadoSeeder extends Seeder
             'rol' => 'Jefe Inmediato',
             'departamento_id' =>$procesos ,
             'jefe_id' => $GerenteProcesos->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Mayra',
+            'apellido' => 'Salazar',
+            'cedula' => '0834294832',
+            'telefono' => '04-3805400',
+            'extension' => '11.504',
+            'celular' => '0992651863',
+            'correo' => 'msalazar@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-15',
+            'cargo' => 'Analista de Procesos y Proyectos',
+            'rol' => 'Empleado',
+            'departamento_id' =>$procesos ,
+            'jefe_id' => $JefeProcesos->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Briggitt',
+            'apellido' => 'Santillan',
+            'cedula' => '0893403234',
+            'telefono' => '04-3805400',
+            'extension' => '11.502',
+            'celular' => '0962579335',
+            'correo' => 'bsantillan@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-15',
+            'cargo' => 'Analista de Procesos y Proyectos',
+            'rol' => 'Empleado',
+            'departamento_id' =>$procesos ,
+            'jefe_id' => $JefeProcesos->id
+        ]);
+        Empleado::create([
+            'nombre' => 'James',
+            'apellido' => 'Terranova',
+            'cedula' => '0893424333',
+            'telefono' => '04-3805400',
+            'extension' => '11.503',
+            'celular' => '0980753946',
+            'correo' => 'jterranova@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-15',
+            'cargo' => 'Analista de Procesos y Proyectos',
+            'rol' => 'Empleado',
+            'departamento_id' =>$procesos ,
+            'jefe_id' => $JefeProcesos->id
+        ]);
+
+        $GerenteCreditoCobranza= Empleado::create([
+            'nombre' => 'Andrea',
+            'apellido' => 'Tettke',
+            'cedula' => '0742408240',
+            'telefono' => '04-3805400',
+            'extension' => '1.600',
+            'celular' => '0999408178',
+            'correo' => 'atettke@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Gerente Crédito y Cobranzas',
+            'rol' => 'Gerente de Área',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $presidencia->id
+        ]);
+
+
+             $jefeCreditoCobranza= Empleado::create([
+            'nombre' => 'Darwin',
+            'apellido' => 'Orrala',
+            'cedula' => '0932402341',
+            'telefono' => '04-3805400',
+            'extension' => '1.602',
+            'celular' => '0997020567',
+            'correo' => 'dorrala@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Supervisor de Cartera',
+            'rol' => 'Jefe Inmediato',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $GerenteCreditoCobranza->id
+        ]);
+
+         Empleado::create([
+            'nombre' => 'Catherine',
+            'apellido' => 'Basantes',
+            'cedula' => '0481084123',
+            'telefono' => '04-3805400',
+            'extension' => '1.601',
+            'celular' => '0998092134',
+            'correo' => 'cbasantes@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Asistente Junior de Crédito y Cobranzas Cárnicos',
+            'rol' => 'Empleado',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $jefeCreditoCobranza->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Wimber',
+            'apellido' => 'Castañeda',
+            'cedula' => '0825202283',
+            'telefono' => '04-3805400',
+            'extension' => '',
+            'celular' => '0997020376',
+            'correo' => '',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Recaudador',
+            'rol' => 'Empleado',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $jefeCreditoCobranza->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Luis',
+            'apellido' => 'Chavez',
+            'cedula' => '0802343048',
+            'telefono' => '04-3805400',
+            'extension' => '',
+            'celular' => '0979401127',
+            'correo' => '',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Recaudador',
+            'rol' => 'Empleado',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $jefeCreditoCobranza->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Liceth',
+            'apellido' => 'Delgado',
+            'cedula' => '0655092342',
+            'telefono' => '04-3805400',
+            'extension' => '1.605',
+            'celular' => '0997020716',
+            'correo' => 'ldelgado@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Asistente Senior Credito y Cobranzas Pecuario y Balanceado',
+            'rol' => 'Empleado',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $jefeCreditoCobranza->id
+        ]);
+        Empleado::create([
+            'nombre' => 'Jenniffer',
+            'apellido' => 'Parraga',
+            'cedula' => '0923224234',
+            'telefono' => '04-3805400',
+            'extension' => '1.606',
+            'celular' => '0978766759',
+            'correo' => 'jparraga@liris.com.ec',
+            'fecha_nacimiento' => '1995-09-12',
+            'cargo' => 'Asistente Junior de Crédito y Cobranzas Cárnicos',
+            'rol' => 'Empleado',
+            'departamento_id' =>$credito_cobranza ,
+            'jefe_id' => $jefeCreditoCobranza->id
         ]);
     }
 }
