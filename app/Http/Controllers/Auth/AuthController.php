@@ -11,10 +11,9 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function login(Request $request){
-        $request->validate([
-           'nombre_usuario' => 'required|string',
-            'password' => 'required|string'
-        ],
+        $request->validate(
+            ['nombre_usuario' => 'required|string',
+            'password' => 'required|string'],
             [
                 'nombre_usuario.required' => 'El nombre de usuario es obligatorio.',
                 'nombre_usuario.string'   => 'El nombre de usuario debe ser un texto.',

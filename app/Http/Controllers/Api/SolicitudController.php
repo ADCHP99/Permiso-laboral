@@ -7,93 +7,57 @@ use App\Http\Helpers\ApiResponse;
 use App\Http\Requests\StoreSolicitudRequest;
 use App\Models\Empleado;
 use App\Models\Solicitud;
+use App\Services\SolicitudService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SolicitudController extends Controller
 {
-    //  APROBAR
-    private function puedeAprobar(Empleado $empleado, Solicitud $solicitud): bool
-    {
-        $solicitante = $solicitud->empleado;
-        if (!$solicitante) return false;
+    protected $solicitudService;
 
-        if (in_array($solicitante->rol, ['Gerente de Área', 'Gerente de Recursos Humanos'])) {
-            return $empleado->rol === 'Presidente';
-        }
-
-        if ($empleado->rol === 'Jefe Inmediato') {
-            return $solicitante->jefe_id === $empleado->id;
-        }
-
-        if ($empleado->rol === 'Gerente de Área') {
-            return $solicitante->departamento_id === $empleado->departamento_id;
-        }
-
-        if ($empleado->rol === 'Gerente de Recursos Humanos') {
-            return true;
-        }
-
-        return false;
-    }
-
-    // --- Chequeo para VER
-
-    private function puedeVer(Empleado $empleado, Solicitud $solicitud): bool
-    {
-        $solicitante = $solicitud->empleado;
-
-        if ($empleado->id === $solicitante->id) {
-            return true;
-        }
-
-        if ($empleado->rol === 'Jefe Inmediato') {
-            return $solicitante->jefe_id === $empleado->id;
-        }
-
-        if ($empleado->rol === 'Gerente de Área') {
-            return $solicitante->departamento_id === $empleado->departamento_id;
-        }
-
-        if ($empleado->rol === 'Gerente de Recursos Humanos') {
-            return true;
-        }
-
-        if ($empleado->rol === 'Presidente') {
-            return in_array($solicitante->rol, ['Gerente de Área', 'Gerente de Recursos Humanos']);
-        }
-
-        return false;
-    }
+    public function __construct(SolicitudService $solicitudService)
+    {$this->solicitudService = $solicitudService;}
 
     // --- LISTADO GENERAL para jefes/gerentes/rrhh/presidente
     public function index(Request $request)
     {
         $empleado = $request->user()->empleado;
-
         if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
 
         $perPage = $request->input('perPage', 5);
 
-        $paginator = Solicitud::with('empleado')
-            ->where('estado_eliminado', 1)
-            ->orderByDesc('fecha_solicitud')
-            ->paginate($perPage);
+        $query = Solicitud::with('empleado')->where('estado_eliminado', 1);
 
-        $items = $paginator->getCollection()->filter(fn($s) => $this->puedeVer($empleado, $s))->values();
-        $paginator->setCollection($items);
-        /*
-        $solicitudes = Solicitud::with('empleado')
-            ->where('estado_eliminado', 1)
-            ->get()
-            ->filter(fn($s) => $this->puedeVer($empleado, $s))
-            ->sortByDesc('fecha_solicitud')
-            ->values();
-*/
+        switch ($empleado->rol) {
+            case 'Jefe Inmediato':
+                $idsSubordinados = Empleado::where('jefe_id', $empleado->id)->pluck('id');
+                $query->whereIn('empleado_id', $idsSubordinados);
+                break;
+            case 'Gerente de Área':
+                $idsDepartamento = Empleado::where('departamento_id', $empleado->departamento_id)
+                    ->where('id', '!=', $empleado->id)
+                    ->pluck('id');
+                $query->whereIn('empleado_id', $idsDepartamento);
+                break;
+            case 'Gerente de Recursos Humanos':
+                $query->where('empleado_id', '!=', $empleado->id);
+                break;
+            case 'Presidente':
+                $idsGerentes = Empleado::whereIn('rol', ['Gerente de Área', 'Gerente de Recursos Humanos'])
+                    ->where('id', '!=', $empleado->id)
+                    ->pluck('id');
+                $query->whereIn('empleado_id', $idsGerentes);
+                break;
+            default:
+                $query->whereRaw('1=0');
+                break;
+        }
+
+        $paginator = $query->orderByDesc('fecha_solicitud')->paginate($perPage);
+
         return ApiResponse::paginated($paginator, 'Solicitudes');
     }
-
     // --- VER DETALLE (para los que pueden ver)
     public function show($id, Request $request)
     {
@@ -102,7 +66,7 @@ class SolicitudController extends Controller
 
         $solicitud = Solicitud::with('empleado')->find($id);
 
-        if (!$solicitud || !$this->puedeVer($empleado, $solicitud)) {
+        if (!$solicitud || !$this->solicitudService->puedeVer($empleado, $solicitud)) {
             return ApiResponse::notFound("Solicitud no encontrada o sin permiso para verla");
         }
 
@@ -163,21 +127,26 @@ class SolicitudController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('archivo_pdf') && $request->file('archivo_pdf')->isValid()) {
+            // (Opcional) Elimina el archivo anterior
+            if ($solicitud->archivo_pdf) {
+                \Storage::disk('public')->delete($solicitud->archivo_pdf);
+            }
             $archivoPath = $request->file('archivo_pdf')->store('solicitudes', 'public');
-            $solicitud->archivo_pdf = $archivoPath;
+            $data['archivo_pdf'] = $archivoPath;
+        } else {
+            unset($data['archivo_pdf']);
         }
 
-        $solicitud->update([
-            'tipo_permiso' => $data['tipo_permiso'],
-            'fecha_inicio' => $data['fecha_inicio'],
-            'fecha_fin' => $data['fecha_fin'] ?? $data['fecha_inicio'],
-            'hora_inicio' => $data['hora_inicio'] ?? null,
-            'hora_fin' => $data['hora_fin'] ?? null,
-            'motivo' => $data['motivo'],
-            'descripcion' => $data['descripcion'],
-        ]);
+        $solicitud->update($data);
 
-        return ApiResponse::success("Solicitud actualizada correctamente", $solicitud);
+        $archivoUrl = isset($data['archivo_pdf'])
+            ? asset("storage/{$data['archivo_pdf']}")
+            : ($solicitud->archivo_pdf ? asset("storage/{$solicitud->archivo_pdf}") : null);
+
+        return ApiResponse::success('Solicitud actualizada', [
+            'solicitud' => $solicitud,
+            'archivo_pdf' => $archivoUrl,
+        ]);
     }
 
     // --- ELIMINAR (solo dueño y pendiente)
@@ -201,107 +170,51 @@ class SolicitudController extends Controller
         return ApiResponse::success("Solicitud eliminada correctamente");
     }
 
-    // --- APROBAR (según flujo de roles)
-    public function aprobar($id, Request $request)
-    {
+    public function aprobar($id,Request $request){
         $empleado = $request->user()->empleado;
         if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
-        $solicitud = Solicitud::with('empleado')->find($id);
-
+        $solicitud=Solicitud::with('empleado')->find($id);
         if (!$solicitud) return ApiResponse::notFound("Solicitud no encontrada");
-
-
-        $solicitante = $solicitud->empleado;
-
-        // Si ya fue finalizada
-        if (in_array($solicitud->estado, ['rechazado', 'aprobado_total'])) {
-            return ApiResponse::error("Solicitud ya fue finalizada", 403);
+        if (!$this->solicitudService->puedeAprobar($empleado, $solicitud)) {
+            return ApiResponse::error('No autorizado para aprobar esta solicitud', 403);
         }
-
-        // Empleado común
-        if ($solicitante->rol === 'Empleado') {
-            if ($empleado->rol === 'Jefe Inmediato') {
-                if ($solicitud->estado !== 'pendiente') {
-                    return ApiResponse::error('Solo puede aprobar si está pendiente.', 403);
-                }
-                $solicitud->estado = 'aprobado_jefe';
-            } elseif ($empleado->rol === 'Gerente de Área') {
-                if ($solicitud->estado !== 'aprobado_jefe') {
-                    return ApiResponse::error('Debe aprobar primero el Jefe Inmediato.', 403);
-                }
-                $solicitud->estado = 'aprobado_gerente';
-            } elseif ($empleado->rol === 'Gerente de Recursos Humanos') {
-                if ($solicitud->estado !== 'aprobado_gerente') {
-                    return ApiResponse::error('Debe aprobar primero el Gerente de Área.', 403);
-                }
-                $solicitud->estado = 'aprobado_total';
-            } else {
-                return ApiResponse::error('No autorizado.', 403);
-            }
+        if (!$this->solicitudService->puedeAprobar($empleado, $solicitud)) {
+            return ApiResponse::error('No autorizado para aprobar esta solicitud', 403);
         }
-        // Jefe Inmediato solicita
-        elseif ($solicitante->rol === 'Jefe Inmediato') {
-            if ($empleado->rol === 'Gerente de Área') {
-                if ($solicitud->estado !== 'pendiente') {
-                    return ApiResponse::error('Solo puede aprobar si está pendiente.', 403);
-                }
-                $solicitud->estado = 'aprobado_gerente';
-            } elseif ($empleado->rol === 'Gerente de Recursos Humanos') {
-                if ($solicitud->estado !== 'aprobado_gerente') {
-                    return ApiResponse::error('Debe aprobar primero el Gerente de Área.', 403);
-                }
-                $solicitud->estado = 'aprobado_total';
-            } else {
-                return ApiResponse::error('No autorizado.', 403);
-            }
-        }
-        // Gerente de Área o Recursos Humanos solicita
-        elseif (in_array($solicitante->rol, ['Gerente de Área', 'Gerente de Recursos Humanos'])) {
-            if ($empleado->rol === 'Presidente') {
-                if ($solicitud->estado !== 'pendiente') {
-                    return ApiResponse::error('Solo puede aprobar si está pendiente.', 403);
-                }
-                $solicitud->estado = 'aprobado_total';
-            } else {
-                return ApiResponse::error('Solo el Presidente puede aprobar estas solicitudes.', 403);
-            }
-        } else {
-            return ApiResponse::error('Rol de solicitante no reconocido.', 403);
-        }
-
-        // Guardar
-        DB::beginTransaction();
         try {
-            $solicitud->save();
-            DB::commit();
+            $solicitud= $this->solicitudService->aprobacion($empleado,$solicitud);
             return ApiResponse::success("Solicitud aprobada", $solicitud);
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            Log::error("Error al aprobar solicitud", ['error' => $e->getMessage()]);
-            return ApiResponse::error("Error interno al aprobar la solicitud", 500);
+        }catch (\Exception $e){
+            return ApiResponse::error("Error al aprobar solicitud", ['error' => $e->getMessage()],403);
         }
     }
 
-    // --- RECHAZAR
-    public function rechazar($id, Request $request)
-    {
+    public function rechazar($id,Request $request){
         $empleado = $request->user()->empleado;
+
         if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
-        $solicitud = Solicitud::with('empleado')->find($id);
-        if (!$solicitud || !$this->puedeAprobar($empleado, $solicitud)) {
-            return ApiResponse::error("No autorizado para rechazar esta solicitud", 403);
+        $solicitud=Solicitud::with('empleado')->find($id);
+        if (!$solicitud) return ApiResponse::notFound("Solicitud no encontrada");
+        if (!$this->solicitudService->puedeAprobar($empleado, $solicitud)) {
+            return ApiResponse::error('No autorizado para rechazar esta solicitud', 403);
         }
 
-        $request->validate([
-            'observacion_rechazo' => 'required|string|max:500'
-        ]);
+        $request->validate(['observacion_rechazo' => 'required|string|max:255',],
+            [
+                'observacion_rechazo.required' => 'La observacion es requerida',
+                'observacion_rechazo.string' => 'La observacion del rechazo debe ser texto',
+            ]);
 
-        $solicitud->estado = 'rechazado';
-        $solicitud->observacion_rechazo = $request->observacion_rechazo;
-        $solicitud->save();
+        try{
+            $solicitud= $this->solicitudService->rechazar($empleado,$solicitud,$request->observacion_rechazo);
+            return ApiResponse::success("Solicitud rechazada", $solicitud);
 
-        return ApiResponse::success("Solicitud rechazada", $solicitud);
+        }catch (\Exception $e){
+            return ApiResponse::error("Error al aprobar solicitud", ['error' => $e->getMessage()],403);
+        }
+
     }
+
 
     // --- CRUD de MIS solicitudes (empleado común)
     public function meSolicitudes(Request $request)
@@ -309,7 +222,7 @@ class SolicitudController extends Controller
         $empleado = $request->user()->empleado;
         if (!$empleado) return ApiResponse::unauthorized("Usuario no autorizado");
 
-        $perPage = $request->input('per_page', 5); // Por defecto, 10 por página
+        $perPage = $request->input('per_page', 5);
 
         $paginator = Solicitud::where('empleado_id', $empleado->id)
             ->where('estado_eliminado', 1)

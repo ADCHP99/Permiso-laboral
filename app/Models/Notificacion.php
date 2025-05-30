@@ -6,11 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notificacion extends Model
 {
+    protected $table = 'notificaciones';
     protected $fillable = [
-        'empleado_id', 'origen_empleado_id', 'mensaje', 'leida', 'fecha_notificacion'
+        'empleado_id', 'origen_empleado_id','tipo', 'mensaje', 'leida', 'fecha_notificacion'
     ];
 
-    public function receptor()
+    protected $casts = [
+        'leida' => 'boolean',
+        'fecha_notificacion' => 'datetime',
+    ];
+    public function empleado()
     {
         return $this->belongsTo(Empleado::class, 'empleado_id');
     }

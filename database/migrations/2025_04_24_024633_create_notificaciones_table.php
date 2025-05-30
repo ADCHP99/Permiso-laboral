@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('empleado_id')->constrained('empleados')->cascadeOnDelete();
             $table->unsignedBigInteger('origen_empleado_id')->nullable();
             $table->foreign('origen_empleado_id')->references('id')->on('empleados')->nullOnDelete();
+            $table->string('tipo')->nullable();
             $table->string('mensaje');
             $table->boolean('leida')->default(false);
-            $table->timestamp('fecha_notificacion');
+            $table->timestamp('fecha_notificacion')->useCurrent();
             $table->timestamps();
         });
     }

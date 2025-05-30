@@ -19,7 +19,7 @@ Route::middleware(['force.json', 'auth.custom', 'format.validation'])->group(fun
         Route::get('/solicitudes', [SolicitudController::class, 'meSolicitudes']);       // Listar propias
         Route::post('/solicitudes', [SolicitudController::class, 'store']);              // Crear propia
         Route::get('/solicitudes/{id}', [SolicitudController::class, 'showMe']);         // Ver propia
-        Route::put('/solicitudes/{id}', [SolicitudController::class, 'update']);         // Editar propia
+        Route::post('/solicitudes/{id}', [SolicitudController::class, 'update']);         // Editar propia
         Route::delete('/solicitudes/{id}', [SolicitudController::class, 'destroy']);     // Eliminar propia
     });
 

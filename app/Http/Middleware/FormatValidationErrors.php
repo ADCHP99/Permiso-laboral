@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Helpers\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -19,11 +20,11 @@ class FormatValidationErrors
         try {
             return $next($request);
         } catch (ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error de validación.',
-                'errors' => $e->errors()
-            ], 422);
+            return ApiResponse::error(
+                'Error de validacion',
+                $e->errors(),
+                422
+            );
         }
 
     }
