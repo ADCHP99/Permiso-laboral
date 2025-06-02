@@ -355,9 +355,8 @@ class EmpleadoSeeder extends Seeder
             'cargo' => 'Gerente Crédito y Cobranzas',
             'rol' => 'Gerente de Área',
             'departamento_id' =>$credito_cobranza ,
-            'jefe_id' => $presidencia->id
+            'jefe_id' => $presidente->id
         ]);
-
 
              $jefeCreditoCobranza= Empleado::create([
             'nombre' => 'Darwin',
@@ -395,20 +394,6 @@ class EmpleadoSeeder extends Seeder
             'telefono' => '04-3805400',
             'extension' => '',
             'celular' => '0997020376',
-            'correo' => '',
-            'fecha_nacimiento' => '1995-09-12',
-            'cargo' => 'Recaudador',
-            'rol' => 'Empleado',
-            'departamento_id' =>$credito_cobranza ,
-            'jefe_id' => $jefeCreditoCobranza->id
-        ]);
-        Empleado::create([
-            'nombre' => 'Luis',
-            'apellido' => 'Chavez',
-            'cedula' => '0802343048',
-            'telefono' => '04-3805400',
-            'extension' => '',
-            'celular' => '0979401127',
             'correo' => '',
             'fecha_nacimiento' => '1995-09-12',
             'cargo' => 'Recaudador',
