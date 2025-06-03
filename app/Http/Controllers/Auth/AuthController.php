@@ -34,10 +34,12 @@ class AuthController extends Controller
                     'id' => $usuario->empleado?->id,
                     'nombre' => $usuario->empleado?->nombre,
                     'apellido' => $usuario->empleado?->apellido,
+                    'correo'=> $usuario->empleado?->correo,
                     'cedula' => $usuario->empleado?->cedula,
                     'telefono' => $usuario->empleado?->telefono,
                     'cargo' => $usuario->empleado?->cargo,
                     'rol' => $usuario->empleado?->rol,
+                    'departamento' => $usuario->empleado?->departamento,
                 ]
             ]
         ];

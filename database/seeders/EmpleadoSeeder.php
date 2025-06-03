@@ -361,7 +361,7 @@ class EmpleadoSeeder extends Seeder
              $jefeCreditoCobranza= Empleado::create([
             'nombre' => 'Darwin',
             'apellido' => 'Orrala',
-            'cedula' => '0932402341',
+                'cedula' => '0932402341',
             'telefono' => '04-3805400',
             'extension' => '1.602',
             'celular' => '0997020567',
