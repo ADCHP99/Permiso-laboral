@@ -96,14 +96,13 @@ class SolicitudController extends Controller
             'hora_fin' => $data['hora_fin'] ?? null,
             'motivo' => $data['motivo'],
             'descripcion' => $data['descripcion'],
-            'archivo_pdf' => $archivoPath,
+            'archivo_pdf' => $archivoPath ,
             'estado' => 'pendiente',
             'estado_eliminado' => 1
         ]);
 
         return ApiResponse::success('Solicitud registrada', [
-            'solicitud' => $solicitud,
-            'archivo_pdf' => $archivoPath ? asset("storage/$archivoPath") : null,
+            'solicitud' => $solicitud
         ]);
     }
 
@@ -143,9 +142,8 @@ class SolicitudController extends Controller
             ? asset("storage/{$data['archivo_pdf']}")
             : ($solicitud->archivo_pdf ? asset("storage/{$solicitud->archivo_pdf}") : null);
 
-        return ApiResponse::success('Solicitud actualizada', [
-            'solicitud' => $solicitud,
-            'archivo_pdf' => $archivoUrl,
+        return ApiResponse::success('Solicitud registrada', [
+            'solicitud' => $solicitud
         ]);
     }
 
